@@ -1,0 +1,40 @@
+---
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - parted
+      - xfsprogs
+      - e2fsprogs
+    state: present
+
+- name: Create partitions on the data disk
+  ansible.builtin.parted:
+    device: "{{ disk_device }}"
+    number: "{{ item.number }}"
+    part_start: "{{ item.start }}"
+    part_end: "{{ item.end }}"
+    state: present
+  loop:
+    - { number: 1, start: 0%, end: 40% }
+    - { number: 2, start: 40%, end: 90% }
+
+- name: Initialize XFS on partition 1
+  ansible.builtin.filesystem:
+    dev: "{{ disk_device }}1"
+    fstype: xfs
+
+- name: Initialize EXT4 on partition 2
+  ansible.builtin.filesystem:
+    dev: "{{ disk_device }}2"
+    fstype: ext4
+
+- name: Mount partitions
+  ansible.builtin.mount:
+    path: "{{ item.path }}"
+    src: "{{ disk_device }}{{ item.partition }}"
+    fstype: "{{ item.fstype }}"
+    state: mounted
+    opts: "defaults"
+  loop:
+    - { path: /part1, partition: 1, fstype: xfs }
+    - { path: /part2, partition: 2, fstype: ext4 }

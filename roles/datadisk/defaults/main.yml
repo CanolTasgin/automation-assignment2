@@ -1,0 +1,3 @@
+---
+# Default variable for the disk device
+disk_device: "/dev/sdc"

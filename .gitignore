@@ -1,0 +1,7 @@
+# terraform gitignore files
+.terraform*
+*.tfstate
+
+# vscode files
+.vscode
+.DS_Store

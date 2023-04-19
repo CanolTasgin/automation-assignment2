@@ -1,0 +1,38 @@
+---
+- name: Partition the data disk
+  parted:
+    device: "{{ datadisk_device }}"
+    number: "{{ item.number }}"
+    state: present
+    part_start: "{{ item.start }}"
+    part_end: "{{ item.end }}"
+  loop:
+    - {number: 1, start: 0%, end: 40%}
+    - {number: 2, start: 40%, end: 90%}
+
+- name: Create filesystems on partitions
+  filesystem:
+    fstype: "{{ item.fstype }}"
+    dev: "{{ datadisk_device }}{{ item.number }}"
+  loop:
+    - {number: 1, fstype: xfs}
+    - {number: 2, fstype: ext4}
+
+- name: Create mount points
+  file:
+    path: "{{ item.path }}"
+    state: directory
+  loop:
+    - {path: /part1}
+    - {path: /part2}
+
+- name: Mount partitions persistently
+  mount:
+    path: "{{ item.path }}"
+    src: "{{ datadisk_device }}{{ item.number }}"
+    fstype: "{{ item.fstype }}"
+    state: mounted
+    opts: defaults
+  loop:
+    - {number: 1, path: /part1, fstype: xfs}
+    - {number: 2, path: /part2, fstype: ext4}

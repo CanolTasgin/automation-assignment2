@@ -1,0 +1,25 @@
+---
+- name: Install Apache web server
+  package:
+    name: httpd
+    state: present
+
+- name: Create HTML files
+  ansible.builtin.copy:
+    content: "{{ inventory_hostname }}"
+    dest: "/tmp/{{ inventory_hostname }}.html"
+  delegate_to: localhost
+  become: no
+
+- name: Copy HTML files to managed nodes
+  copy:
+    src: "/tmp/{{ inventory_hostname }}.html"
+    dest: "/var/www/html/index.html"
+    mode: 0444
+
+- name: Ensure Apache web server is running and enabled
+  systemd:
+    name: httpd
+    state: started
+    enabled: yes
+  notify: Restart Apache
